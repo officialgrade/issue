@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Issue Reporting Portal</title>
+  <link rel="icon" href="logo.png" type="image/png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+    /* Reset and base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #121212;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+      /* Smooth font rendering */
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Small circular Get Help button on top-left */
+    #getHelpBtn {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      width: 40px;
+      height: 40px;
+      background: #1e90ff;
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-weight: 700;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(30,144,255,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+      z-index: 1100;
+      user-select: none;
+    }
+    #getHelpBtn:hover {
+      background: #1c86ee;
+      transform: scale(1.1);
+      box-shadow: 0 6px 18px rgba(30,144,255,0.9);
+    }
+    #getHelpBtn:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(30,144,255,0.7);
+    }
+
+    /* Main container box */
+    .container {
+      background: rgba(255 255 255 / 0.1);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      max-width: 480px;
+      width: 100%;
+      padding: 2rem;
+      text-align: center;
+      margin-top: 3rem; /* so content is below fixed Get Help button */
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      animation: fadeIn 1s ease forwards;
+      opacity: 0;
+    }
+
+    h1 {
+      margin: 0 0 1.5rem 0;
+      font-weight: 600;
+      font-size: 1.75rem;
+      letter-spacing: 1px;
+      user-select: none;
+      animation: slideDownFade 0.8s ease forwards;
+      opacity: 0;
+    }
+
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      align-items: center; /* center horizontally */
+    }
+    label {
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      display: block;
+      user-select: none;
+      text-align: left; /* left aligned label for readability */
+      width: 100%;
+      max-width: 480px;
+      padding-left: 1rem;
+      box-sizing: border-box;
+    }
+
+    input[type="text"],
+    select,
+    textarea {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      outline: none;
+      width: 480px;
+      max-width: 100%;
+      font-family: 'Inter', sans-serif;
+      resize: vertical;
+      /* Blue tinted border on focus */
+      border: 2px solid transparent;
+      background-color: #222;
+      color: #eee;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+      user-select: text;
+      box-sizing: border-box;
+      margin-left: auto;
+      margin-right: auto;
+      display: block;
+    }
+    input[type="text"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #1e90ff;
+      background-color: #1b1b1b;
+      box-shadow: 0 0 12px rgba(30,144,255,0.7);
+      transform: scale(1.02);
+    }
+
+    textarea {
+      min-height: 100px;
+      max-height: 180px;
+    }
+
+
+    button[type="submit"] {
+      background: #1e90ff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.85rem 1.5rem;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+      width: 200px;
+      max-width: 90vw;
+      align-self: center;
+      box-shadow: 0 4px 12px rgba(30, 144, 255, 0.6);
+      user-select: none;
+      animation: popIn 0.6s ease forwards;
+      opacity: 0;
+    }
+    button[type="submit"]:hover {
+      background: #1c86ee;
+      transform: scale(1.1);
+      box-shadow: 0 6px 18px rgba(30, 144, 255, 0.9);
+    }
+    button[type="submit"]:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(30,144,255,0.7);
+    }
+
+    .message {
+      margin-top: 1rem;
+      font-weight: 600;
+      padding: 1rem;
+      border-radius: 12px;
+      display: none;
+      max-width: 480px;
+      user-select: none;
+      margin-left: auto;
+      margin-right: auto;
+      animation: fadeIn 1s ease forwards;
+    }
+    .message.success {
+      background-color: #4ade80;
+      color: #064e3b;
+    }
+    .message.error {
+      background-color: #f87171;
+      color: #7f1d1d;
+    }
+
+
+    /* Checkbox container align left */
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 480px;
+      max-width: 100%;
+      user-select: none;
+      cursor: pointer;
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 1rem;
+      box-sizing: border-box;
+      animation: slideLeftFade 0.8s ease forwards;
+      opacity: 0;
+    }
+    .checkbox-container input[type="checkbox"] {
+      margin-right: 0.5rem;
+      cursor: pointer;
+    }
+    .checkbox-container label {
+      margin: 0;
+    }
+
+    /* Notifications section outside container, centered */
+    .notifications {
+      width: 100%;
+      max-width: 480px;
+      text-align: center;
+      margin-bottom: 2rem;
+      user-select: none;
+      animation: fadeInUp 1s ease forwards;
+      opacity: 0;
+    }
+    .notifications h2 {
+      margin-bottom: 1rem;
+      font-weight: 600;
+      font-size: 1.5rem;
+      letter-spacing: 0.5px;
+      user-select: none;
+    }
+    .notification-button {
+      background: #333;
+      border: none;
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      margin: 0.5rem auto;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+      width: 400px;
+      max-width: 90vw;
+      cursor: default; /* explicitly indicate no action */
+      user-select: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .notification-button:hover {
+      background: #444;
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.8);
+    }
+    .status-bar {
+      height: 10px;
+      border-radius: 6px;
+      flex-grow: 1;
+      margin-left: 16px;
+      box-shadow: inset 0 1px 3px rgba(255,255,255,0.3);
+      transition: background-color 0.4s ease;
+    }
+    .complete {
+      background-color: #4ade80;
+    }
+    .in-progress {
+      background-color: #fbbf24;
+    }
+    .not-started {
+      background-color: #f87171;
+    }
+
+    /* Popup styling with fade & zoom animation */
+    .popup {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease;
+      z-index: 1300;
+    }
+    .popup.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .popup-content {
+      background: #222;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 420px;
+      width: 90%;
+      color: #fff;
+      overflow-y: auto;
+      max-height: 80vh;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.9);
+      position: relative;
+      transform: translateY(0) scale(0.8);
+      opacity: 0;
+      transition: opacity 1s ease, transform 1s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .popup.active .popup-content {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    .close-popup {
+      position: absolute;
+      top: 10px;
+      right: 14px;
+      cursor: pointer;
+      color: #1e90ff;
+      font-weight: 700;
+      font-size: 1.8rem;
+      user-select: none;
+      transition: color 1s ease;
+    }
+    .close-popup:hover {
+      color: #63b3ed; /* lighter blue */
+    }
+    /* Scrollbar for popup content - custom */
+    .popup-content::-webkit-scrollbar {
+      width: 8px;
+    }
+    .popup-content::-webkit-scrollbar-track {
+      background: #111;
+      border-radius: 8px;
+    }
+    .popup-content::-webkit-scrollbar-thumb {
+      background-color: #1e90ff;
+      border-radius: 8px;
+      border: 2px solid #111;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 520px) {
+      body {
+        padding: 1rem;
+      }
+      .container {
+        max-width: 100%;
+        padding: 1.5rem;
+        margin-top: 4rem;
+      }
+      .notification-button {
+        width: 100%;
+      }
+      #getHelpBtn {
+        top: 0.5rem;
+        left: 0.5rem;
+        width: 36px;
+        height: 36px;
+        font-size: 1.2rem;
+      }
+      input[type="text"],
+      select,
+      textarea,
+      label,
+      .checkbox-container {
+        max-width: 100%;
+        width: 100%;
+        padding-left: 0;
+        box-sizing: border-box;
+      }
+      .checkbox-container {
+        padding-left: 0;
+        justify-content: flex-start;
+      }
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    @keyframes popIn {
+      0% {opacity: 0; transform: scale(0.9);}
+      100% {opacity: 1; transform: scale(1);}
+    }
+    @keyframes slideDownFade {
+      0% {opacity: 0; transform: translateY(-10px);}
+      100% {opacity: 1; transform: translateY(0);}
+    }
+    @keyframes slideLeftFade {
+      0% {opacity: 0; transform: translateX(-20px);}
+      100% {opacity: 1; transform: translateX(0);}
+    }
+    @keyframes fadeInUp {
+      0% {opacity: 0; transform: translateY(10px);}
+      100% {opacity: 1; transform: translateY(0);}
+    }
+
+  </style>
+</head>
+<body>
+  <!-- Get Help button top-left -->
+  <button id="getHelpBtn" aria-label="Get help and instructions" title="Get Help">?</button>
+
+  <!-- Main container with form -->
+  <main class="container" role="main" aria-labelledby="formTitle" id="mainContent" tabindex="-1">
+    <h1 id="formTitle">Report Your Issue</h1>
+    <form id="issueForm" method="POST" action="https://formspree.io/f/xgvyeqbw" novalidate>
+      <div>
+        <label for="name">Name <span aria-hidden="true">*</span></label>
+        <input type="text" id="name" name="name" placeholder="Your full name" required autocomplete="name" />
+      </div>
+      <div class="checkbox-container">
+        <input type="checkbox" id="anonymous" name="anonymous" />
+        <label for="anonymous">Submit anonymously</label>
+      </div>
+      <div>
+        <label for="grade">Grade <span aria-hidden="true">*</span></label>
+        <select id="grade" name="grade" required aria-required="true" aria-describedby="gradeHelp">
+          <option value="" disabled selected>Select your grade</option>
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+        </select>
+        <div id="gradeHelp" style="font-size: 0.8rem; color: #888; margin-top: 2px;">Select your current grade.</div>
+      </div>
+      <div>
+        <label for="section">Section <span aria-hidden="true">*</span></label>
+        <input type="text" id="section" name="section" placeholder="Your section" required autocomplete="off" />
+      </div>
+      <div>
+        <label for="problem">Problem you are facing <span aria-hidden="true">*</span></label>
+        <textarea id="problem" name="problem" placeholder="Describe your problem here..." required></textarea>
+      </div>
+
+      <!-- Hidden field for spam protection -->
+      <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
+
+      <button type="submit" aria-live="polite" aria-atomic="true">Send</button>
+    </form>
+    <div id="formMessage" class="message" role="alert" aria-live="polite" aria-atomic="true"></div>
+  </main>
+
+  <!-- Notifications outside container and centered -->
+  <section class="notifications" aria-label="Task notifications and statuses">
+    <h2>Notifications</h2>
+    <button class="notification-button" type="button" aria-disabled="true" tabindex="-1">
+      Completed
+      <div class="status-bar complete" aria-label="Task complete"></div>
+    </button>
+    <button class="notification-button" type="button" aria-disabled="true" tabindex="-1">
+      in Progress
+      <div class="status-bar in-progress" aria-label="Task in progress"></div>
+    </button>
+    <button class="notification-button" type="button" aria-disabled="true" tabindex="-1">
+      Yet To Start
+      <div class="status-bar not-started" aria-label="Task not started, planned"></div>
+    </button>
+  </section>
+
+  <!-- Popup for Get Help -->
+  <div class="popup" id="helpPopup" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-describedby="helpDesc" tabindex="-1">
+    <div class="popup-content">
+      <button class="close-popup" id="closePopup" aria-label="Close help popup">&times;</button>
+      <h2 id="helpTitle">Help Instructions</h2>
+      <div id="helpDesc">
+        <p>Follow these steps to report your issue:</p>
+        <ol>
+          <li>Fill in your name, grade, section, and describe the problem you are facing.</li>
+          <li>If you want to submit your response anonymously, check the box provided.</li>
+          <li>Click the <strong>Send</strong> button to submit your report.</li>
+          <li>You will receive a confirmation message upon successful submission.</li>
+        </ol>
+        <p>If you have any further questions, feel free to contact me</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Announcement popup with confetti -->
+  <div class="popup" id="announcementPopup" role="dialog" aria-modal="true" aria-labelledby="announcementTitle" aria-describedby="announcementDesc" tabindex="-1" style="opacity: 1; pointer-events: auto;">
+    <div class="popup-content" style="transform: scale(1); opacity: 1;">
+      <h2 id="announcementTitle">Cultural Captain</h2>
+      <p id="announcementDesc">Vote For Dikshil</p>
+      <button id="announcementOkBtn" style="background:#1e90ff; color:#fff; border:none; border-radius:8px; padding:0.6rem 1.4rem; font-weight:600; cursor:pointer; transition: background-color 0.3s ease; user-select:none; width:150px; margin-top:20px;">OK</button>
+    </div>
+  </div>
+
+  <!-- Confetti container -->
+  <canvas id="confettiCanvas" style="position: fixed; pointer-events:none; top:0; left:0; width:100%; height:100%; z-index:1500; display:none;"></canvas>
+
+  <script>
+    'use strict';
+    const form = document.getElementById('issueForm');
+    const formMessage = document.getElementById('formMessage');
+    const helpPopup = document.getElementById('helpPopup');
+    const getHelpBtn = document.getElementById('getHelpBtn');
+    const closePopup = document.getElementById('closePopup');
+    const announcementPopup = document.getElementById('announcementPopup');
+    const announcementOkBtn = document.getElementById('announcementOkBtn');
+    const mainContent = document.getElementById('mainContent');
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const ctx = confettiCanvas.getContext('2d');
+
+    // Resize canvas to full window
+    function resizeCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Confetti particle class
+    class ConfettiParticle {
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.size = Math.random() * 8 + 4;
+        this.color = color;
+        this.speedX = (Math.random() - 0.5) * 5;
+        this.speedY = Math.random() * -7 - 3;
+        this.gravity = 0.01;
+        this.rotation = Math.random() * 360;
+        this.rotationSpeed = (Math.random() - 0.5) * 10;
+        this.opacity = 1;
+        this.dop = 0.02 + Math.random() * 0.02;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.speedY += this.gravity;
+        this.rotation += this.rotationSpeed;
+        this.opacity -= this.dop;
+      }
+      draw(ctx) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(this.opacity,0);
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation * Math.PI / 180);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+        ctx.restore();
+      }
+    }
+
+    let confettiParticles = [];
+
+    function launchConfetti() {
+      confettiParticles = [];
+      const colors = ['#1e90ff', '#22c55e', '#fbbf24', '#f87171', '#a78bfa', '#f472b6'];
+      for (let i = 0; i < 100; i++) {
+        const x = Math.random() * window.innerWidth;
+        const y = window.innerHeight + 20;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        confettiParticles.push(new ConfettiParticle(x, y, color));
+      }
+      confettiCanvas.style.display = 'block';
+      requestAnimationFrame(confettiLoop);
+    }
+
+    function confettiLoop() {
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiParticles.forEach((p, index) => {
+        p.update();
+        p.draw(ctx);
+        if(p.opacity <= 0) {
+          confettiParticles.splice(index, 1);
+        }
+      });
+      if(confettiParticles.length > 0) {
+        requestAnimationFrame(confettiLoop);
+      } else {
+        confettiCanvas.style.display = 'none';
+      }
+    }
+
+    // Announcement popup: on load, show popup and hide main content
+    document.body.style.overflow = 'hidden';
+    mainContent.style.opacity = '0';
+    mainContent.style.pointerEvents = 'none';
+
+    // Announcement OK button handler
+    announcementOkBtn.addEventListener('click', () => {
+      // Start confetti and close popup
+      launchConfetti();
+      announcementPopup.style.opacity = '0';
+      announcementPopup.style.pointerEvents = 'none';
+      document.body.style.overflow = '';
+      // Fade in main content after a short delay to enjoy confetti
+      setTimeout(() => {
+        mainContent.style.transition = 'opacity 1s ease';
+        mainContent.style.opacity = '1s';
+        mainContent.style.pointerEvents = 'auto';
+      }, 500);
+    });
+
+    // Form submit handler with async fetch to Formspree
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+
+      // Reset message area
+      formMessage.style.display = 'none';
+      formMessage.textContent = '';
+      formMessage.className = 'message';
+
+      // Basic spam check
+      if (form._gotcha.value.trim() !== '') {
+        formMessage.textContent = 'Submission blocked.';
+        formMessage.classList.add('error');
+        formMessage.style.display = 'block';
+        return;
+      }
+
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch(form.action, {
+          method: form.method,
+          body: formData,
+          headers: { 'Accept': 'application/json' }
+        });
+        if (response.ok) {
+          formMessage.textContent = 'Thank you! Your issue has been submitted successfully.';
+          formMessage.classList.add('success');
+          formMessage.style.display = 'block';
+          form.reset();
+          form.grade.selectedIndex = 0;
+        } else {
+          const data = await response.json();
+          if (data && data.errors) {
+            formMessage.textContent = data.errors.map(e => e.message).join(', ');
+          } else {
+            formMessage.textContent = 'Oops! There was a problem submitting your form.';
+          }
+          formMessage.classList.add('error');
+          formMessage.style.display = 'block';
+        }
+      } catch (error) {
+        formMessage.textContent = 'Oops! There was a problem submitting your form.';
+        formMessage.classList.add('error');
+        formMessage.style.display = 'block';
+      }
+    });
+
+    // Show popup and trap focus for accessibility
+    getHelpBtn.addEventListener('click', () => {
+      helpPopup.classList.add('active');
+      helpPopup.focus();
+      // Trap focus inside popup (simple approach)
+      document.body.style.overflow = 'hidden'; // prevent background scroll
+    });
+    closePopup.addEventListener('click', () => {
+      helpPopup.classList.remove('active');
+      document.body.style.overflow = ''; // restore scroll
+      getHelpBtn.focus();
+    });
+    // Close popup on click outside content
+    helpPopup.addEventListener('click', e => {
+      if (e.target === helpPopup) {
+        helpPopup.classList.remove('active');
+        document.body.style.overflow = '';
+        getHelpBtn.focus();
+      }
+    });
+
+    // Close popup on ESC key
+    window.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && helpPopup.classList.contains('active')) {
+        helpPopup.classList.remove('active');
+        document.body.style.overflow = '';
+        getHelpBtn.focus();
+      }
+    });
+  </script>
+</body>
+</html>
